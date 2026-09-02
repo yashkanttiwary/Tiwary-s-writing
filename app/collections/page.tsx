@@ -1,9 +1,20 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getWritings } from '@/lib/content';
 import { formatDate } from '@/lib/utils';
 import ReadingModeWrapper from '@/components/literary/ReadingModeWrapper';
 import { ArrowLeft, Book } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Collections',
+  description: 'Writings grouped by shared themes, eras, or forthcoming volumes.',
+  openGraph: {
+    title: 'Collections | Tiwary’s Writing',
+    description: 'Writings grouped by shared themes, eras, or forthcoming volumes.',
+    url: '/collections',
+  },
+};
 
 export default async function CollectionsPage() {
   const writings = await getWritings();

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getWritingBySlug, getWritings } from '@/lib/content';
 import { formatDate } from '@/lib/utils';
 import { LiteraryRenderer } from '@/components/literary/LiteraryRenderer';
@@ -8,6 +9,39 @@ import { ArrowLeft, Heart } from 'lucide-react';
 
 interface Props {
   params: Promise<{ year: string; slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const writing = await getWritingBySlug(slug);
+  
+  if (!writing) return {};
+
+  const { title, excerpt, publishedAt, tags, type } = writing.metadata;
+  
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com';
+  const url = `${siteUrl}/writing/${writing.year}/${slug}`;
+
+  return {
+    title: title || 'Untitled',
+    description: excerpt || `A ${type} by Yash Kant Tiwary, published on ${publishedAt}.`,
+    alternates: {
+      canonical: url,
+      types: {
+        'application/json': `${siteUrl}/api/v1/writings/${writing.metadata.id}`,
+        'text/markdown': `${siteUrl}/api/v1/writings/${writing.metadata.id}.md`,
+      }
+    },
+    openGraph: {
+      title: title || 'Untitled',
+      description: excerpt || `A ${type} by Yash Kant Tiwary.`,
+      url,
+      type: 'article',
+      publishedTime: publishedAt as string,
+      authors: ['Yash Kant Tiwary'],
+      tags: tags,
+    },
+  };
 }
 
 export async function generateStaticParams() {
@@ -40,8 +74,41 @@ export default async function WritingPage({ params }: Props) {
     .sort(() => Math.random() - 0.5)
     .slice(0, 2);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com';
+  const url = `${siteUrl}/writing/${writing.year}/${slug}`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork', // or BlogPosting, Article
+    headline: title || 'Untitled',
+    description: writing.metadata.excerpt || `A ${type} by Yash Kant Tiwary.`,
+    author: {
+      '@type': 'Person',
+      name: 'Yash Kant Tiwary',
+      url: siteUrl,
+    },
+    datePublished: publishedAt as string,
+    dateModified: writing.metadata.updatedAt || publishedAt as string,
+    genre: type,
+    keywords: writing.metadata.tags?.join(', '),
+    url: url,
+    inLanguage: language || 'en',
+    publisher: {
+      '@type': 'Person',
+      name: 'Yash Kant Tiwary'
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': url
+    }
+  };
+
   return (
     <ReadingModeWrapper>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <main className="min-h-screen bg-[var(--color-canvas)] pb-32">
         {/* Minimal Navigation */}
         <nav className="py-8 px-6 sm:px-12 max-w-5xl mx-auto w-full flex items-center justify-between opacity-50 hover:opacity-100 transition-opacity">

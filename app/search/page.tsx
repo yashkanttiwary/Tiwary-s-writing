@@ -2,6 +2,15 @@ import { getWritings } from '@/lib/content';
 import SearchClient from './SearchClient';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Search',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function SearchPage() {
   const writings = await getWritings();

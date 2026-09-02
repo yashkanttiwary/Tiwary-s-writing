@@ -5,7 +5,21 @@ import { ArrowRight, Sparkles, History, Search } from 'lucide-react';
 
 export default async function Home() {
   const allWritings = await getWritings();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com';
   
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Tiwary’s Writing',
+    url: siteUrl,
+    description: 'A life, left in words. A living literary archive of Yash Kant Tiwary.',
+    author: {
+      '@type': 'Person',
+      name: 'Yash Kant Tiwary',
+      url: siteUrl
+    }
+  };
+
   if (allWritings.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -104,6 +118,10 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="py-20 px-6 sm:px-12 max-w-5xl mx-auto w-full flex flex-col sm:flex-row sm:items-baseline justify-between gap-6">
         <div>
           <h1 className="text-2xl font-serif tracking-tight text-[var(--color-ink)]">Tiwary’s Writing</h1>

@@ -1,7 +1,18 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getWritings } from '@/lib/content';
 import { formatDate } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'The Archive',
+  description: 'A complete index of published writings in the literary archive of Yash Kant Tiwary.',
+  openGraph: {
+    title: 'The Archive | Tiwary’s Writing',
+    description: 'A complete index of published writings.',
+    url: '/archive',
+  },
+};
 
 export default async function ArchivePage() {
   const writings = await getWritings();

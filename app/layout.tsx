@@ -23,13 +23,25 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Tiwary’s Writing',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com'),
+  title: {
+    default: 'Tiwary’s Writing',
+    template: '%s | Tiwary’s Writing',
+  },
   description: 'A life, left in words. A living literary archive of Yash Kant Tiwary.',
   openGraph: {
     title: 'Tiwary’s Writing',
     description: 'A life, left in words. A living literary archive of Yash Kant Tiwary.',
+    url: '/',
+    siteName: 'Tiwary’s Writing',
     type: 'website',
   },
+  alternates: {
+    types: {
+      'application/rss+xml': '/feed.xml',
+      'application/feed+json': '/feed.json',
+    },
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
