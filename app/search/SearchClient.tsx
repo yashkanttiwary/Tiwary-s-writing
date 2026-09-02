@@ -15,54 +15,87 @@ interface WritingLight {
   content: string;
 }
 
+const HINDI_MAP: Record<string, string> = {
+  'अ': 'a', 'आ': 'a', 'इ': 'i', 'ई': 'i', 'उ': 'u', 'ऊ': 'u', 'ऋ': 'ri',
+  'ए': 'e', 'ऐ': 'ai', 'ओ': 'o', 'औ': 'au',
+  'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'n',
+  'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'n',
+  'ट': 't', 'ठ': 'th', 'ड': 'd', 'ढ': 'dh', 'ण': 'n',
+  'त': 't', 'थ': 'th', 'द': 'd', 'ध': 'dh', 'न': 'n',
+  'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm',
+  'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v', 'श': 'sh', 'ष': 'sh', 'स': 's', 'ह': 'h',
+  'क्ष': 'ksh', 'त्र': 'tr', 'ज्ञ': 'gy', 'श्र': 'shr',
+  'क़': 'q', 'ख़': 'kh', 'ग़': 'g', 'ज़': 'z', 'ड़': 'd', 'ढ़': 'dh', 'फ़': 'f',
+  'ा': 'a', 'ि': 'i', 'ी': 'i', 'ु': 'u', 'ू': 'u', 'ृ': 'ri',
+  'े': 'e', 'ै': 'ai', 'ो': 'o', 'ौ': 'au', 'ं': 'n', 'ँ': 'n', 'ः': 'h',
+  '्': '',
+  '०': '0', '१': '1', '२': '2', '३': '3', '४': '4', '५': '5', '६': '6', '७': '7', '८': '8', '९': '9',
+  '।': '.', '॥': '..'
+};
+
+function transliterateAndNormalize(text: string): string {
+  if (!text) return "";
+  let trans = '';
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    trans += HINDI_MAP[char] !== undefined ? HINDI_MAP[char] : char;
+  }
+  let norm = trans.toLowerCase();
+  norm = norm.replace(/ee/g, 'i').replace(/oo/g, 'u').replace(/aa/g, 'a').replace(/w/g, 'v');
+  norm = norm.replace(/(.)\1+/g, '$1');
+  return norm;
+}
+
 export default function SearchClient({ writings }: { writings: WritingLight[] }) {
   const [query, setQuery] = useState("");
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
     
-    const lowerQuery = query.toLowerCase();
+    const normalizedQuery = transliterateAndNormalize(query.trim());
+    const exactQueryLower = query.trim().toLowerCase();
     const matches = [];
 
     for (const w of writings) {
       let matchedContent = "";
       let isMatch = false;
 
-      // Check title
-      if (w.title?.toLowerCase().includes(lowerQuery)) {
+      const titleNorm = transliterateAndNormalize(w.title || '');
+      if (titleNorm.includes(normalizedQuery)) {
         isMatch = true;
       }
       
-      // Check type / tag equivalents if needed
-      if (w.type.toLowerCase().includes(lowerQuery)) {
+      const typeNorm = transliterateAndNormalize(w.type);
+      if (typeNorm.includes(normalizedQuery)) {
         isMatch = true;
       }
 
-      // Check content
-      const contentIndex = w.content.toLowerCase().indexOf(lowerQuery);
-      if (contentIndex !== -1) {
-        isMatch = true;
-        
-        let start = contentIndex;
-        while (start > 0 && !['.', '!', '?', '\n'].includes(w.content[start - 1])) {
-          start--;
+      // Check content line-by-line / sentence-by-sentence
+      // Split by punctuation or newline, keeping the delimiters to reconstruct safely
+      const fragments = w.content.split(/([.?!|\n]+)/);
+      let sentences = [];
+      let current = "";
+      for (let i = 0; i < fragments.length; i++) {
+        current += fragments[i];
+        if (i % 2 === 1 || i === fragments.length - 1) {
+          if (current.trim()) sentences.push(current.trim());
+          current = "";
         }
+      }
+
+      for (const sentence of sentences) {
+        // Strip out markdown for cleaner matching and display
+        const plainSentence = sentence.replace(/[#*`_]/g, '');
+        const sentenceNorm = transliterateAndNormalize(plainSentence);
         
-        let end = contentIndex + lowerQuery.length;
-        while (end < w.content.length && !['.', '!', '?', '\n'].includes(w.content[end])) {
-          end++;
-        }
-        
-        if (end < w.content.length && ['.', '!', '?'].includes(w.content[end])) {
-           end++;
-        }
-        
-        matchedContent = w.content.slice(start, end).trim();
-        matchedContent = matchedContent.replace(/[#*`_]/g, '');
-        
-        // If it's too long, truncate it nicely
-        if (matchedContent.length > 200) {
-           matchedContent = matchedContent.slice(0, 200) + '...';
+        if (sentenceNorm.includes(normalizedQuery)) {
+          isMatch = true;
+          matchedContent = plainSentence;
+          
+          if (matchedContent.length > 200) {
+             matchedContent = matchedContent.slice(0, 200) + '...';
+          }
+          break; // just need the first matched sentence
         }
       }
 
@@ -99,19 +132,25 @@ export default function SearchClient({ writings }: { writings: WritingLight[] })
         )}
 
         {results.map((res, i) => {
-          // Highlight the query in the matched content if possible
-          let displayMatch = <>{res.matchedContent}</>;
+          let displayMatch: React.ReactNode = <>{res.matchedContent}</>;
+          
           if (res.matchedContent) {
-             const parts = res.matchedContent.split(new RegExp(`(${query})`, 'gi'));
-             displayMatch = (
-                <>
-                   {parts.map((part, idx) => 
-                     part.toLowerCase() === query.toLowerCase() 
-                     ? <strong key={idx} className="text-[var(--color-ink)] font-normal">{part}</strong> 
-                     : part
-                   )}
-                </>
-             );
+            // Try to highlight exact match (e.g. if searching in English for English text)
+            if (res.matchedContent.toLowerCase().includes(query.trim().toLowerCase())) {
+               const parts = res.matchedContent.split(new RegExp(`(${query.trim()})`, 'gi'));
+               displayMatch = (
+                  <>
+                     {parts.map((part, idx) => 
+                       part.toLowerCase() === query.trim().toLowerCase() 
+                       ? <strong key={idx} className="text-[var(--color-ink)] font-medium bg-[var(--color-ink)]/5 px-1 rounded">{part}</strong> 
+                       : part
+                     )}
+                  </>
+               );
+            } else {
+               // Phonetic Hindi match: exact substring replacement is hard, so we prominently display the matched sentence
+               displayMatch = <span className="text-[var(--color-ink)]">{res.matchedContent}</span>;
+            }
           }
 
           return (
