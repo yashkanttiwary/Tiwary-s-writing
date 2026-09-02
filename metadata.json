@@ -1,0 +1,8 @@
+{
+  "name": "Tiwary's Writing",
+  "description": "A living literary archive of Yash Kant Tiwary's life in words.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
