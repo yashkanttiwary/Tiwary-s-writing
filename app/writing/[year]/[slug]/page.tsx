@@ -45,10 +45,15 @@ export default async function WritingPage({ params }: Props) {
       <main className="min-h-screen bg-[var(--color-canvas)] pb-32">
         {/* Minimal Navigation */}
         <nav className="py-8 px-6 sm:px-12 max-w-5xl mx-auto w-full flex items-center justify-between opacity-50 hover:opacity-100 transition-opacity">
-          <Link href="/archive" className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
-            <ArrowLeft size={14} />
-            <span>Archive</span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
+              <ArrowLeft size={14} />
+              <span>Home</span>
+            </Link>
+            <Link href="/archive" className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
+              <span>Archive</span>
+            </Link>
+          </div>
         </nav>
 
         <article className="px-6 sm:px-12 pt-10 sm:pt-20">
