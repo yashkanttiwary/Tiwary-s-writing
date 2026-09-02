@@ -70,3 +70,17 @@ If the user provides you with a poem and their "omissions and faults," use your 
 
 ## 6. Migration and Organization
 Always use the `collections` array in the frontmatter to group related writings. If the user mentions a specific book or collection concept (e.g., "This is part of my 'Midnight' collection"), add `collections: ["Midnight"]`. This ensures future migrations or category pages can easily query the content by collection.
+
+## 7. SEO, Metadata, and Machine-Readability (CRITICAL)
+This archive is designed as a fully open, machine-readable, and SEO-optimized literary repository. The YAML frontmatter you write is the **single source of truth** that automatically powers:
+- Canonical HTML URLs and Open Graph tags.
+- Schema.org JSON-LD (CreativeWork).
+- The `sitemap.xml` and RSS/JSON feeds.
+- The public read-only API (`/api/v1/writings`) and Markdown representations.
+- The IndexNow protocol.
+
+**When adding or modifying a writing, you MUST follow these SEO and archival rules:**
+1. **Permanent Identity**: The `id` must be a stable string that never changes. The `slug` dictates the permanent canonical URL (`/writing/[year]/[slug]`). Do not change slugs unless explicitly requested, as it breaks inbound links.
+2. **Accurate Excerpts**: You MUST provide an `excerpt` in the frontmatter. If the user does not provide one, derive it deterministically from the first 1-2 lines of the poem or the first sentence of the prose. **NEVER hallucinate, editorialize, or write "SEO-optimized" summaries** that invent meaning not found in the original text.
+3. **Pristine Content**: Do not place algorithmic keywords or hidden SEO text in the markdown body. The human literary reading experience must remain entirely untouched. The infrastructure handles all the machine-readability invisibly.
+4. **Publishing Triggers**: When you successfully add or update a writing, if you are able to execute commands, you may conceptually trigger the IndexNow ping (or just know that the system will automatically include it in the sitemaps/feeds instantly).
