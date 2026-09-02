@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import matter from 'gray-matter';
 import { z } from 'zod';
+import { cache } from 'react';
 
 // Define the content directory
 const CONTENT_DIR = path.join(process.cwd(), 'content/writings');
@@ -45,10 +46,18 @@ export interface Writing {
   month: string;
 }
 
-export async function getWritings(includeDrafts = false): Promise<Writing[]> {
+export const getWritings = cache(async (includeDrafts = false): Promise<Writing[]> => {
   const writings: Writing[] = [];
   
   try {
+    // Check if directory exists first
+    try {
+      await fs.access(CONTENT_DIR);
+    } catch {
+      console.warn(`Content directory not found: ${CONTENT_DIR}. Returning empty array.`);
+      return [];
+    }
+
     const years = await fs.readdir(CONTENT_DIR);
     
     for (const year of years) {
@@ -69,9 +78,23 @@ export async function getWritings(includeDrafts = false): Promise<Writing[]> {
           if (!file.endsWith('.md') && !file.endsWith('.mdx')) continue;
           
           const filePath = path.join(monthPath, file);
-          const fileContent = await fs.readFile(filePath, 'utf-8');
+          let fileContent = '';
+          try {
+             fileContent = await fs.readFile(filePath, 'utf-8');
+          } catch(err) {
+             console.error(`Failed to read file ${filePath}:`, err);
+             continue;
+          }
           
-          const { data, content } = matter(fileContent);
+          let data, content;
+          try {
+             const parsed = matter(fileContent);
+             data = parsed.data;
+             content = parsed.content;
+          } catch(err) {
+             console.error(`Failed to parse frontmatter in ${filePath}:`, err);
+             continue;
+          }
           
           try {
             const metadata = writingSchema.parse(data);
@@ -88,6 +111,7 @@ export async function getWritings(includeDrafts = false): Promise<Writing[]> {
             });
           } catch (e) {
             console.error(`Validation error in ${filePath}:`, e);
+            // We gracefully continue if a single file has malformed YAML
           }
         }
       }
@@ -100,7 +124,7 @@ export async function getWritings(includeDrafts = false): Promise<Writing[]> {
   return writings.sort((a, b) => {
     return new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime();
   });
-}
+});
 
 export async function getWritingBySlug(slug: string): Promise<Writing | null> {
   const writings = await getWritings(true);

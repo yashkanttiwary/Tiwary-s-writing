@@ -33,9 +33,12 @@ export default async function Home() {
           <h1 className="text-2xl font-serif tracking-tight text-[var(--color-ink)]">Tiwary’s Writing</h1>
           <p className="text-[var(--color-ink-muted)] mt-2 font-serif italic text-lg">A life, left in words.</p>
         </div>
-        <nav>
+        <nav className="flex gap-6">
           <Link href="/archive" className="text-sm font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
             Archive
+          </Link>
+          <Link href="/collections" className="text-sm font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
+            Collections
           </Link>
         </nav>
       </header>

@@ -20,7 +20,13 @@ export async function generateStaticParams() {
 
 export default async function WritingPage({ params }: Props) {
   const { slug } = await params;
-  const writing = await getWritingBySlug(slug);
+  let writing = null;
+  
+  try {
+    writing = await getWritingBySlug(slug);
+  } catch (err) {
+    console.error(`Error fetching writing with slug ${slug}:`, err);
+  }
 
   if (!writing) {
     notFound();
