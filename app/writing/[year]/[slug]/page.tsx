@@ -141,7 +141,7 @@ export default async function WritingPage({ params }: Props) {
             )}
           </div>
           <div>
-            <DownloadButton title={title || 'Untitled'} />
+            <DownloadButton title={title || 'Untitled'} writing={writing} />
           </div>
         </nav>
 
