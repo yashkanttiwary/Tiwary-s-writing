@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Download, Image as ImageIcon, FileText, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import type { Writing } from '@/lib/content';
 
 export default function DownloadButton({ title, writing }: { title: string, writing?: Writing }) {
@@ -27,6 +25,8 @@ export default function DownloadButton({ title, writing }: { title: string, writ
     
     // Tiny delay to ensure styles and layouts are settled
     await new Promise(resolve => setTimeout(resolve, 100));
+
+    const html2canvas = (await import('html2canvas')).default;
 
     const canvas = await html2canvas(element, {
       scale: 2, 
@@ -71,6 +71,8 @@ export default function DownloadButton({ title, writing }: { title: string, writ
   const downloadPDF = async () => {
     try {
       setIsProcessing(true);
+      
+      const { jsPDF } = await import('jspdf');
       
       const pdf = new jsPDF({
         orientation: 'p',
@@ -188,7 +190,7 @@ export default function DownloadButton({ title, writing }: { title: string, writ
     <div className="relative" ref={menuRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors p-2 -mr-2"
+        className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors p-2"
         title="Download"
         aria-label="Download options"
       >

@@ -47,8 +47,10 @@ export default function SearchClient() {
   // Clear results immediately on query change so stale results don't show
   useEffect(() => {
     if (query !== debouncedQuery) {
-      setIsLoading(true);
-      setHasSearched(false);
+      setTimeout(() => {
+        setIsLoading(true);
+        setHasSearched(false);
+      }, 0);
     }
   }, [query, debouncedQuery]);
 
@@ -80,7 +82,7 @@ export default function SearchClient() {
       <div className="flex flex-col gap-12">
         {hasSearched && !isLoading && results.length === 0 && (
           <p className="text-[var(--color-ink-faint)] font-serif italic text-lg text-center mt-12">
-            No writings found for "{debouncedQuery}".
+            No writings found for &quot;{debouncedQuery}&quot;.
           </p>
         )}
 

@@ -8,6 +8,7 @@ import ReadingModeWrapper from '@/components/literary/ReadingModeWrapper';
 import { ArrowLeft, ArrowRight, Heart } from 'lucide-react';
 import AppreciationButton from '@/components/literary/AppreciationButton';
 import DownloadButton from '@/components/literary/DownloadButton';
+import ShareButton from '@/components/literary/ShareButton';
 
 interface Props {
   params: Promise<{ year: string; slug: string }>;
@@ -140,7 +141,8 @@ export default async function WritingPage({ params }: Props) {
               </Link>
             )}
           </div>
-          <div>
+          <div className="flex items-center gap-1 sm:gap-2 -mr-2">
+            <ShareButton title={title || 'Untitled'} url={url} />
             <DownloadButton title={title || 'Untitled'} writing={writing} />
           </div>
         </nav>
