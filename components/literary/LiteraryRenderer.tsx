@@ -1,17 +1,20 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Writing } from '@/lib/content';
 
-// Simple text processor to handle basic inline markdown (like *italic* or **bold**)
-// For a production app this could use remark/rehype, but for exact control 
-// over literary forms, a custom block parser is often cleaner as requested.
+// Replacing naive regex parser with robust react-markdown for AST-based rendering
+// while preserving inline nature
 const parseInline = (text: string) => {
-  let processed = text;
-  // bold
-  processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // italic
-  processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  
-  return <span dangerouslySetInnerHTML={{ __html: processed }} />;
+  return (
+    <ReactMarkdown 
+      components={{
+        p: ({node, ...props}) => <span {...props} />,
+        a: ({node, ...props}) => <a className="underline hover:text-black" target="_blank" rel="noopener noreferrer" {...props} />
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  );
 };
 
 const PoetryRenderer = ({ content, presentation }: { content: string, presentation?: Writing['metadata']['presentation'] }) => {

@@ -37,8 +37,15 @@ export default async function Home() {
   const currentDay = today.getDate();
   
   const onThisDay = allWritings.filter(w => {
-    const pubDate = new Date(w.metadata.publishedAt);
-    return pubDate.getMonth() + 1 === currentMonth && pubDate.getDate() === currentDay && pubDate.getFullYear() !== today.getFullYear();
+    const pubString = w.metadata.publishedAt;
+    if (typeof pubString !== 'string' || pubString.length < 10) return false;
+    
+    // Extract directly from YYYY-MM-DD string to avoid timezone parsing shifts
+    const month = parseInt(pubString.substring(5, 7), 10);
+    const date = parseInt(pubString.substring(8, 10), 10);
+    const year = parseInt(pubString.substring(0, 4), 10);
+    
+    return month === currentMonth && date === currentDay && year !== today.getFullYear();
   });
 
   // --- Archive Presence Metrics ---

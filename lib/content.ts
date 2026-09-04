@@ -93,6 +93,7 @@ export const getWritings = cache(async (includeDrafts = false): Promise<Writing[
              content = parsed.content;
           } catch(err) {
              console.error(`Failed to parse frontmatter in ${filePath}:`, err);
+             if (process.env.NODE_ENV === 'development') throw new Error(`Invalid frontmatter in ${filePath}: ${err}`);
              continue;
           }
           
@@ -111,7 +112,8 @@ export const getWritings = cache(async (includeDrafts = false): Promise<Writing[
             });
           } catch (e) {
             console.error(`Validation error in ${filePath}:`, e);
-            // We gracefully continue if a single file has malformed YAML
+            if (process.env.NODE_ENV === 'development') throw new Error(`Invalid metadata in ${filePath}: ${e}`);
+            // We gracefully continue if a single file has malformed YAML in prod
           }
         }
       }

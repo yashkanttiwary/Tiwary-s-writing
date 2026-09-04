@@ -61,8 +61,8 @@ export default function AdminEditor() {
         </div>
         
         <div className="flex items-center gap-4">
-           <button className="text-sm font-sans text-[var(--color-ink-muted)]">Save Draft</button>
-           <button className="text-sm font-sans bg-[var(--color-ink)] text-white px-4 py-2 rounded-full hover:bg-black transition-colors" onClick={() => alert('Publishing will commit to GitHub in production.')}>Publish</button>
+           <span className="text-xs font-sans text-amber-600 bg-amber-50 px-2 py-1 rounded">Local Preview Mode</span>
+           <button className="text-sm font-sans bg-[var(--color-ink)] text-white px-4 py-2 rounded-full hover:bg-black transition-colors" onClick={() => alert('This is a local previewer. To publish this piece, create a .md file in /content/writings/[YYYY]/[MM]/ via your code editor.')}>Publish</button>
         </div>
       </header>
 
