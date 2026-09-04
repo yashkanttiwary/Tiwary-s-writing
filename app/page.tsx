@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from 'next/link';
 import { getWritings, Writing } from '@/lib/content';
 import { formatDate } from '@/lib/utils';
@@ -135,6 +136,9 @@ export default async function Home() {
           <p className="text-[var(--color-ink-muted)] mt-2 font-serif italic text-lg">A life, left in words.</p>
         </div>
         <nav className="flex gap-6 items-center">
+          <Link href="/latest" className="text-sm font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
+            Latest
+          </Link>
           <Link href="/archive" className="text-sm font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
             Archive
           </Link>

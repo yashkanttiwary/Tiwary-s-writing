@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Bookmark, ArrowUpRight } from 'lucide-react';
+import { Home, Bookmark } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function GlobalNav() {
@@ -44,15 +44,6 @@ export default function GlobalNav() {
         aria-label="Reading List"
       >
         <Bookmark size={18} strokeWidth={1.5} aria-hidden="true" />
-      </Link>
-
-      <Link 
-        href="/latest" 
-        className="pointer-events-auto bg-[var(--color-ink)] border border-[var(--color-ink)] shadow-sm text-[var(--color-canvas)] hover:opacity-90 px-4 h-10 rounded-full flex items-center justify-center gap-2 transition-all duration-300 backdrop-blur-md font-sans text-xs tracking-wide uppercase font-medium ml-1"
-        title="Read Most Recent"
-      >
-        <span>Most Recent</span>
-        <ArrowUpRight size={14} strokeWidth={2} />
       </Link>
     </div>
   );
