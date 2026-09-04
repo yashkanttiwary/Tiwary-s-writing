@@ -40,7 +40,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: publishedAt as string,
       authors: ['Yash Kant Tiwary'],
       tags: tags,
-      // Default og:image to fix L-04
       images: [
         {
           url: `${siteUrl}/icon.png`,
@@ -85,7 +84,7 @@ export default async function WritingPage({ params }: Props) {
   
   const allWritings = await getWritings();
   const currentIndex = allWritings.findIndex(w => w.metadata.id === writing.metadata.id);
-  const next = currentIndex > 0 ? allWritings[currentIndex - 1] : null;
+  const next = currentIndex > 0 ? allWritings[currentIndex - 1] : null; // Because array is sorted descending (newest first), index 0 is newest. So next (newer) is -1. Wait, normally "Next" means older? Let's keep it as is.
   const prev = currentIndex !== -1 && currentIndex < allWritings.length - 1 ? allWritings[currentIndex + 1] : null;
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tiwaryswriting.vercel.app';
@@ -123,7 +122,7 @@ export default async function WritingPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="min-h-screen bg-[var(--color-canvas)] pb-32">
+      <main className="min-h-screen bg-[var(--color-canvas)] pb-24">
         {/* Minimal Navigation */}
         <nav className="py-8 px-6 sm:px-12 max-w-5xl mx-auto w-full flex items-center justify-between opacity-50 hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-6">
@@ -142,24 +141,24 @@ export default async function WritingPage({ params }: Props) {
           </div>
         </nav>
 
-        <article className="px-6 sm:px-12 pt-10 sm:pt-20" lang={language === 'hi' ? 'hi' : 'en'}>
-          <header className="max-w-[var(--spacing-reading-prose)] mx-auto w-full text-center mb-16 sm:mb-24">
+        <article className="px-6 sm:px-12 pt-6 sm:pt-12" lang={language === 'hi' ? 'hi' : 'en'}>
+          <header className="max-w-[var(--spacing-reading-prose)] mx-auto w-full text-center mb-12 sm:mb-16">
             <h1 className={`text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--color-ink)] leading-tight ${language === 'hi' ? 'font-devanagari' : ''}`}>
               {title || 'Untitled'}
             </h1>
-            <div className="mt-6 sm:mt-10 flex flex-col items-center justify-center gap-2 text-sm font-sans text-[var(--color-ink-faint)] tracking-wide">
+            <div className="mt-6 flex flex-col items-center justify-center gap-2 text-sm font-sans text-[var(--color-ink-faint)] tracking-wide">
               <time dateTime={publishedAt as string}>{formatDate(publishedAt as string)}</time>
               <span className="capitalize">{type}</span>
             </div>
           </header>
 
           {/* The Writing */}
-          <section className="mb-24 sm:mb-32">
+          <section className="mb-16 sm:mb-20">
             <LiteraryRenderer writing={writing} />
           </section>
 
           {/* Interaction */}
-          <footer className="max-w-[var(--spacing-reading-prose)] mx-auto w-full border-t border-[var(--color-border)] pt-12 flex flex-col items-center gap-12">
+          <footer className="max-w-[var(--spacing-reading-prose)] mx-auto w-full border-t border-[var(--color-border)] pt-8 flex flex-col items-center gap-8">
              <AppreciationButton />
              <div className="text-center text-sm font-sans text-[var(--color-ink-faint)]">
                <p>Yash Kant Tiwary</p>
@@ -168,11 +167,11 @@ export default async function WritingPage({ params }: Props) {
         </article>
 
         {/* Discovery Paths */}
-        <section className="discovery-section mt-32 max-w-4xl mx-auto px-6 text-center">
-          <div className="h-px bg-[var(--color-border)] w-12 mx-auto mb-12"></div>
+        <section className="discovery-section mt-20 max-w-4xl mx-auto px-6 text-center">
+          <div className="h-px bg-[var(--color-border)] w-12 mx-auto mb-10"></div>
           <p className="text-sm font-sans uppercase tracking-widest text-[var(--color-ink-faint)] mb-8">Continue Wandering</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
              {prev ? (
                <Link href={`/writing/${prev.year}/${prev.metadata.slug}`} className="block group border border-[var(--color-border)] p-6 hover:border-[var(--color-ink-faint)] transition-colors">
                  <div className="text-xs uppercase tracking-widest text-[var(--color-ink-faint)] mb-3">Previous</div>
@@ -180,13 +179,27 @@ export default async function WritingPage({ params }: Props) {
                    {prev.metadata.title || "Untitled"}
                  </h4>
                </Link>
-             ) : <div className="hidden md:block"></div>}
+             ) : (
+               <Link href="/archive" className="block group border border-[var(--color-border)] p-6 hover:border-[var(--color-ink-faint)] transition-colors">
+                 <div className="text-xs uppercase tracking-widest text-[var(--color-ink-faint)] mb-3">Return to</div>
+                 <h4 className="text-xl font-serif text-[var(--color-ink)] group-hover:text-[var(--color-ink-muted)] transition-colors">
+                   The Archive
+                 </h4>
+               </Link>
+             )}
              
-             {next && (
+             {next ? (
                <Link href={`/writing/${next.year}/${next.metadata.slug}`} className="block group border border-[var(--color-border)] p-6 hover:border-[var(--color-ink-faint)] transition-colors md:text-right">
                  <div className="text-xs uppercase tracking-widest text-[var(--color-ink-faint)] mb-3">Next</div>
                  <h4 className="text-xl font-serif text-[var(--color-ink)] group-hover:text-[var(--color-ink-muted)] transition-colors">
                    {next.metadata.title || "Untitled"}
+                 </h4>
+               </Link>
+             ) : (
+               <Link href="/random" className="block group border border-[var(--color-border)] p-6 hover:border-[var(--color-ink-faint)] transition-colors md:text-right">
+                 <div className="text-xs uppercase tracking-widest text-[var(--color-ink-faint)] mb-3">Discover</div>
+                 <h4 className="text-xl font-serif text-[var(--color-ink)] group-hover:text-[var(--color-ink-muted)] transition-colors">
+                   Random Poem
                  </h4>
                </Link>
              )}
