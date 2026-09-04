@@ -37,10 +37,6 @@ export default function ShareButton({ title, url }: { title: string, url: string
     email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`Read "${title}" by Yash Kant Tiwary:\n\n${url}`)}`,
   };
 
-  const openWindow = (link: string) => {
-    window.open(link, '_blank', 'noopener,noreferrer');
-  };
-
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
@@ -88,40 +84,40 @@ export default function ShareButton({ title, url }: { title: string, url: string
               </button>
             )}
             
-            <button onClick={() => openWindow(shareLinks.whatsapp)} className="flex flex-col items-center gap-2 flex-shrink-0 group w-16">
+            <a href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 flex-shrink-0 group w-16 hover:no-underline">
               <div className="w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 bg-[#25D366] text-white">
                 <WhatsAppIcon />
               </div>
               <span className="text-xs font-sans text-[var(--color-ink-muted)]">WhatsApp</span>
-            </button>
+            </a>
 
-            <button onClick={() => openWindow(shareLinks.twitter)} className="flex flex-col items-center gap-2 flex-shrink-0 group w-16">
+            <a href={shareLinks.twitter} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 flex-shrink-0 group w-16 hover:no-underline">
               <div className="w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 bg-black text-white">
                 <Twitter size={24} fill="currentColor" />
               </div>
               <span className="text-xs font-sans text-[var(--color-ink-muted)]">X</span>
-            </button>
+            </a>
 
-            <button onClick={() => openWindow(shareLinks.facebook)} className="flex flex-col items-center gap-2 flex-shrink-0 group w-16">
+            <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 flex-shrink-0 group w-16 hover:no-underline">
               <div className="w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 bg-[#1877F2] text-white">
                 <Facebook size={24} fill="currentColor" />
               </div>
               <span className="text-xs font-sans text-[var(--color-ink-muted)]">Facebook</span>
-            </button>
+            </a>
 
-            <button onClick={() => openWindow(shareLinks.linkedin)} className="flex flex-col items-center gap-2 flex-shrink-0 group w-16">
+            <a href={shareLinks.linkedin} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 flex-shrink-0 group w-16 hover:no-underline">
               <div className="w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 bg-[#0A66C2] text-white">
                 <Linkedin size={24} fill="currentColor" />
               </div>
               <span className="text-xs font-sans text-[var(--color-ink-muted)]">LinkedIn</span>
-            </button>
+            </a>
 
-            <button onClick={() => openWindow(shareLinks.email)} className="flex flex-col items-center gap-2 flex-shrink-0 group w-16">
+            <a href={shareLinks.email} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 flex-shrink-0 group w-16 hover:no-underline">
               <div className="w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 bg-gray-600 text-white">
                 <Mail size={24} />
               </div>
               <span className="text-xs font-sans text-[var(--color-ink-muted)]">Email</span>
-            </button>
+            </a>
           </div>
 
           {/* Copy Link Section */}

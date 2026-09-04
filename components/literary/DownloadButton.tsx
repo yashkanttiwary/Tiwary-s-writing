@@ -2,14 +2,18 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Download, Image as ImageIcon, FileText, Loader2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import type { Writing } from '@/lib/content';
+import { LiteraryRenderer } from './LiteraryRenderer';
 
 export default function DownloadButton({ title, writing }: { title: string, writing?: Writing }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -20,7 +24,8 @@ export default function DownloadButton({ title, writing }: { title: string, writ
   }, []);
 
   const captureElement = async () => {
-    const element = document.getElementById('writing-capture-area');
+    // Look for the optimized capture area instead of the on-screen one
+    const element = document.getElementById('optimized-capture-area');
     if (!element) throw new Error('Capture area not found');
     
     // Tiny delay to ensure styles and layouts are settled
@@ -29,11 +34,11 @@ export default function DownloadButton({ title, writing }: { title: string, writ
     const html2canvas = (await import('html2canvas')).default;
 
     const canvas = await html2canvas(element, {
-      scale: 2, 
+      scale: 3, // Higher scale for extra crispness on smaller width
       backgroundColor: '#fdfcf9', // Matches var(--color-canvas) exactly
       logging: false,
       useCORS: true,
-      windowWidth: element.scrollWidth,
+      windowWidth: 600, // Tighter width so text appears larger proportionally
       windowHeight: element.scrollHeight
     });
     
@@ -186,38 +191,69 @@ export default function DownloadButton({ title, writing }: { title: string, writ
     }
   };
 
-  return (
-    <div className="relative" ref={menuRef}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors p-2"
-        title="Download"
-        aria-label="Download options"
-      >
-        {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-        <span className="hidden sm:inline font-medium">Save</span>
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-[#fdfcf9] border border-[var(--color-border)] rounded shadow-sm py-1 z-50 flex flex-col font-sans text-sm">
-          <button 
-            onClick={downloadImage}
-            disabled={isProcessing}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-ink)]/5 text-[var(--color-ink)] transition-colors text-left disabled:opacity-50"
-          >
-            <ImageIcon size={15} className="text-[var(--color-ink-muted)]" />
-            <span>Save as Image</span>
-          </button>
-          <button 
-            onClick={downloadPDF}
-            disabled={isProcessing}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-ink)]/5 text-[var(--color-ink)] transition-colors text-left disabled:opacity-50"
-          >
-            <FileText size={15} className="text-[var(--color-ink-muted)]" />
-            <span>Save as PDF (Selectable)</span>
-          </button>
+  const optimizedCaptureContainer = mounted && writing ? (
+    <div 
+      id="optimized-capture-area" 
+      className="fixed left-[200vw] top-0 bg-[#fdfcf9] w-[600px] p-[60px]"
+      style={{
+        color: '#1a1a1a',
+      }}
+    >
+      <div className="flex flex-col items-center">
+        <h1 className="text-4xl mb-4 text-center font-serif leading-tight text-[#1a1a1a]">
+          {title || 'Untitled'}
+        </h1>
+        <div className="flex flex-col items-center justify-center gap-1 text-sm tracking-wide mb-12 font-sans text-[#666666]">
+          {writing.metadata.publishedAt && <time>{new Date(writing.metadata.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>}
+          {writing.metadata.type && <span className="capitalize">{writing.metadata.type}</span>}
         </div>
-      )}
+        
+        <div className="w-full text-lg leading-relaxed font-serif text-[#1a1a1a]">
+          <LiteraryRenderer writing={writing} />
+        </div>
+        
+        <div className="mt-16 pt-8 border-t border-[#e5e5e5] w-full text-center font-sans text-sm text-[#666666]">
+          <span className="block font-medium mb-1 text-[#1a1a1a]">Yash Kant Tiwary</span>
+          <span>tiwaryswriting.com</span>
+        </div>
+      </div>
     </div>
+  ) : null;
+
+  return (
+    <>
+      <div className="relative" ref={menuRef}>
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors p-2"
+          title="Download"
+          aria-label="Download options"
+        >
+          {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+          <span className="hidden sm:inline font-medium">Save</span>
+        </button>
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 w-48 bg-[#fdfcf9] border border-[var(--color-border)] rounded shadow-sm py-1 z-50 flex flex-col font-sans text-sm">
+            <button 
+              onClick={downloadImage}
+              disabled={isProcessing}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-ink)]/5 text-[var(--color-ink)] transition-colors text-left disabled:opacity-50"
+            >
+              <ImageIcon size={15} className="text-[var(--color-ink-muted)]" />
+              <span>Save as Image</span>
+            </button>
+            <button 
+              onClick={downloadPDF}
+              disabled={isProcessing}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-ink)]/5 text-[var(--color-ink)] transition-colors text-left disabled:opacity-50"
+            >
+              <FileText size={15} className="text-[var(--color-ink-muted)]" />
+              <span>Save as PDF (Selectable)</span>
+            </button>
+          </div>
+        )}
+      </div>
+      {mounted && typeof document !== 'undefined' && createPortal(optimizedCaptureContainer, document.body)}
+    </>
   );
 }
