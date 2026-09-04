@@ -33,8 +33,27 @@ export default function ShareButton({ title, url }: { title: string, url: string
     whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(`Read "${title}" by Yash Kant Tiwary.\n\n${url}`)}`,
     twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Read "${title}" by Yash Kant Tiwary.`)}&url=${encodeURIComponent(url)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+    linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(`Read "${title}" by Yash Kant Tiwary.`)}&source=${encodeURIComponent('Tiwary\'s Writing')}`,
     email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`Read "${title}" by Yash Kant Tiwary:\n\n${url}`)}`,
+  };
+
+  const handleMainShareClick = async () => {
+    // Check if device is a mobile device to use native OS share directly
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobileDevice && navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: `Read "${title}" by Yash Kant Tiwary.`,
+          url: url,
+        });
+      } catch (err) {
+        console.error('Share aborted or failed', err);
+      }
+    } else {
+      setIsOpen(true);
+    }
   };
 
   const handleNativeShare = async () => {
@@ -155,7 +174,7 @@ export default function ShareButton({ title, url }: { title: string, url: string
   return (
     <>
       <button 
-        onClick={() => setIsOpen(true)}
+        onClick={handleMainShareClick}
         className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors p-2"
         title="Share"
         aria-label="Share this writing"
