@@ -7,6 +7,7 @@ import { LiteraryRenderer } from '@/components/literary/LiteraryRenderer';
 import ReadingModeWrapper from '@/components/literary/ReadingModeWrapper';
 import { ArrowLeft, ArrowRight, Heart } from 'lucide-react';
 import AppreciationButton from '@/components/literary/AppreciationButton';
+import DownloadButton from '@/components/literary/DownloadButton';
 
 interface Props {
   params: Promise<{ year: string; slug: string }>;
@@ -139,30 +140,36 @@ export default async function WritingPage({ params }: Props) {
               </Link>
             )}
           </div>
+          <div>
+            <DownloadButton title={title || 'Untitled'} />
+          </div>
         </nav>
 
         <article className="px-6 sm:px-12 pt-6 sm:pt-12" lang={language === 'hi' ? 'hi' : 'en'}>
-          <header className="max-w-[var(--spacing-reading-prose)] mx-auto w-full text-center mb-12 sm:mb-16">
-            <h1 className={`text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--color-ink)] leading-tight ${language === 'hi' ? 'font-devanagari' : ''}`}>
-              {title || 'Untitled'}
-            </h1>
-            <div className="mt-6 flex flex-col items-center justify-center gap-2 text-sm font-sans text-[var(--color-ink-faint)] tracking-wide">
-              <time dateTime={publishedAt as string}>{formatDate(publishedAt as string)}</time>
-              <span className="capitalize">{type}</span>
-            </div>
-          </header>
+          <div id="writing-capture-area" className="bg-[var(--color-canvas)] py-12 px-6 sm:px-12 -mx-6 sm:-mx-12 rounded-none sm:rounded-xl">
+            <header className="max-w-[var(--spacing-reading-prose)] mx-auto w-full text-center mb-12 sm:mb-16">
+              <h1 className={`text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--color-ink)] leading-tight ${language === 'hi' ? 'font-devanagari' : ''}`}>
+                {title || 'Untitled'}
+              </h1>
+              <div className="mt-6 flex flex-col items-center justify-center gap-2 text-sm font-sans text-[var(--color-ink-faint)] tracking-wide">
+                <time dateTime={publishedAt as string}>{formatDate(publishedAt as string)}</time>
+                <span className="capitalize">{type}</span>
+              </div>
+            </header>
 
-          {/* The Writing */}
-          <section className="mb-16 sm:mb-20">
-            <LiteraryRenderer writing={writing} />
-          </section>
+            {/* The Writing */}
+            <section className="mb-16 sm:mb-20">
+              <LiteraryRenderer writing={writing} />
+            </section>
+            
+            <div className="max-w-[var(--spacing-reading-prose)] mx-auto w-full text-center text-sm font-sans text-[var(--color-ink-faint)] pb-4">
+              <p>Yash Kant Tiwary</p>
+            </div>
+          </div>
 
           {/* Interaction */}
-          <footer className="max-w-[var(--spacing-reading-prose)] mx-auto w-full border-t border-[var(--color-border)] pt-8 flex flex-col items-center gap-8">
+          <footer className="max-w-[var(--spacing-reading-prose)] mx-auto w-full border-t border-[var(--color-border)] pt-8 flex flex-col items-center gap-8 mt-4">
              <AppreciationButton />
-             <div className="text-center text-sm font-sans text-[var(--color-ink-faint)]">
-               <p>Yash Kant Tiwary</p>
-             </div>
           </footer>
         </article>
 
