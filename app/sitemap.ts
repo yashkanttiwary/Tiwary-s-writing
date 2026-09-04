@@ -2,8 +2,7 @@ import { MetadataRoute } from 'next';
 import { getWritings } from '@/lib/content';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com';
-
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tiwaryswriting.vercel.app';
   const writings = await getWritings();
   
   const writingUrls: MetadataRoute.Sitemap = writings.map((writing) => ({

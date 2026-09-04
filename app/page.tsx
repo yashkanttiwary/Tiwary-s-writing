@@ -275,13 +275,13 @@ export default async function Home() {
         )}
 
         {/* The Archive Timeline / Presence */}
-        <section className="bg-[#f5f4ef] px-8 py-16 -mx-8 sm:px-12 sm:-mx-12 rounded-sm grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-center border border-[var(--color-border)]/50">
+        <section className="bg-[#f5f4ef] px-6 py-16 -mx-6 sm:px-12 sm:-mx-12 rounded-sm grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-center border border-[var(--color-border)]/50">
            <div className="md:col-span-4">
               <div className="text-xs uppercase tracking-widest text-[var(--color-ink-muted)] font-sans">The Archive</div>
            </div>
            <div className="md:col-span-8 flex flex-col gap-8">
               <p className="text-xl font-serif text-[var(--color-ink-muted)] leading-relaxed">
-                 Currently containing {totalWritings} writings across {years.length} {years.length === 1 ? 'year' : 'years'}. 
+                 Currently containing {totalWritings} {totalWritings === 1 ? 'writing' : 'writings'} across {years.length} {years.length === 1 ? 'year' : 'years'}. 
                  {earliestYear && ` The earliest entry dates to ${earliestYear}.`}
               </p>
               <div className="flex flex-wrap gap-x-8 gap-y-4">
@@ -311,7 +311,7 @@ export default async function Home() {
                <div className="flex flex-wrap gap-x-4 gap-y-3 leading-loose font-serif text-lg text-[var(--color-ink-muted)]">
                   {sortedThemes.map((theme, i) => (
                      <span key={theme} className="flex items-center gap-4 group">
-                        <Link href={`/collections`} className="hover:text-[var(--color-ink)] transition-colors cursor-pointer">{theme}</Link>
+                        <Link href={`/collections?theme=${encodeURIComponent(theme)}`} className="hover:text-[var(--color-ink)] transition-colors cursor-pointer">{theme}</Link>
                         {i < sortedThemes.length - 1 && <span className="text-[var(--color-border)]">·</span>}
                      </span>
                   ))}

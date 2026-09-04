@@ -23,7 +23,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://tiwaryswriting.vercel.app'),
   title: {
     default: 'Tiwary’s Writing',
     template: '%s | Tiwary’s Writing',

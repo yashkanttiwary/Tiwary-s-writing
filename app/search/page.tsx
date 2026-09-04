@@ -2,6 +2,7 @@ import SearchClient from './SearchClient';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Search',
@@ -22,7 +23,9 @@ export default function SearchPage() {
       </nav>
       
       <div className="px-6 sm:px-12 pt-10 sm:pt-20 max-w-5xl mx-auto">
-        <SearchClient />
+        <Suspense fallback={<div className="text-center font-serif text-[var(--color-ink-muted)]">Loading search...</div>}>
+          <SearchClient />
+        </Suspense>
       </div>
     </main>
   );

@@ -5,7 +5,8 @@ import { getWritingBySlug, getWritings } from '@/lib/content';
 import { formatDate } from '@/lib/utils';
 import { LiteraryRenderer } from '@/components/literary/LiteraryRenderer';
 import ReadingModeWrapper from '@/components/literary/ReadingModeWrapper';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart } from 'lucide-react';
+import AppreciationButton from '@/components/literary/AppreciationButton';
 
 interface Props {
   params: Promise<{ year: string; slug: string }>;
@@ -16,10 +17,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const writing = await getWritingBySlug(slug);
   
   if (!writing) return {};
-
   const { title, excerpt, publishedAt, tags, type } = writing.metadata;
   
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tiwaryswriting.vercel.app';
   const url = `${siteUrl}/writing/${writing.year}/${slug}`;
 
   return {
@@ -40,7 +40,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: publishedAt as string,
       authors: ['Yash Kant Tiwary'],
       tags: tags,
+      // Default og:image to fix L-04
+      images: [
+        {
+          url: `${siteUrl}/icon.png`,
+          width: 512,
+          height: 512,
+          alt: 'Tiwary’s Writing',
+        }
+      ],
     },
+    twitter: {
+      card: 'summary',
+      title: title || 'Untitled',
+      description: excerpt || `A ${type} by Yash Kant Tiwary.`,
+      images: [`${siteUrl}/icon.png`],
+    }
   };
 }
 
@@ -69,17 +84,16 @@ export default async function WritingPage({ params }: Props) {
   const { title, publishedAt, type, language } = writing.metadata;
   
   const allWritings = await getWritings();
-  const related = allWritings
-    .filter(w => w.metadata.id !== writing.metadata.id)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 2);
+  const currentIndex = allWritings.findIndex(w => w.metadata.id === writing.metadata.id);
+  const next = currentIndex > 0 ? allWritings[currentIndex - 1] : null;
+  const prev = currentIndex !== -1 && currentIndex < allWritings.length - 1 ? allWritings[currentIndex + 1] : null;
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yashkanttiwary.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tiwaryswriting.vercel.app';
   const url = `${siteUrl}/writing/${writing.year}/${slug}`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CreativeWork', // or BlogPosting, Article
+    '@type': 'CreativeWork',
     headline: title || 'Untitled',
     description: writing.metadata.excerpt || `A ${type} by Yash Kant Tiwary.`,
     author: {
@@ -120,10 +134,15 @@ export default async function WritingPage({ params }: Props) {
             <Link href="/archive" className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
               <span>Archive</span>
             </Link>
+            {writing.metadata.collections && writing.metadata.collections.length > 0 && (
+              <Link href={`/collections?name=${encodeURIComponent(writing.metadata.collections[0])}`} className="hidden sm:inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
+                <span>{writing.metadata.collections[0]}</span>
+              </Link>
+            )}
           </div>
         </nav>
 
-        <article className="px-6 sm:px-12 pt-10 sm:pt-20">
+        <article className="px-6 sm:px-12 pt-10 sm:pt-20" lang={language === 'hi' ? 'hi' : 'en'}>
           <header className="max-w-[var(--spacing-reading-prose)] mx-auto w-full text-center mb-16 sm:mb-24">
             <h1 className={`text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--color-ink)] leading-tight ${language === 'hi' ? 'font-devanagari' : ''}`}>
               {title || 'Untitled'}
@@ -141,13 +160,7 @@ export default async function WritingPage({ params }: Props) {
 
           {/* Interaction */}
           <footer className="max-w-[var(--spacing-reading-prose)] mx-auto w-full border-t border-[var(--color-border)] pt-12 flex flex-col items-center gap-12">
-             <button className="group flex flex-col items-center gap-3 text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
-               <div className="w-12 h-12 rounded-full border border-[var(--color-border)] flex items-center justify-center group-hover:border-[var(--color-ink)] transition-colors">
-                 <Heart size={18} className="group-hover:fill-current" />
-               </div>
-               <span className="font-serif italic text-lg tracking-wide">Appreciate</span>
-             </button>
-             
+             <AppreciationButton />
              <div className="text-center text-sm font-sans text-[var(--color-ink-faint)]">
                <p>Yash Kant Tiwary</p>
              </div>
@@ -155,24 +168,30 @@ export default async function WritingPage({ params }: Props) {
         </article>
 
         {/* Discovery Paths */}
-        {related.length > 0 && (
-          <section className="discovery-section mt-32 max-w-2xl mx-auto px-6 text-center">
-            <div className="h-px bg-[var(--color-border)] w-12 mx-auto mb-12"></div>
-            <p className="text-sm font-sans uppercase tracking-widest text-[var(--color-ink-faint)] mb-8">Continue Wandering</p>
-            <div className="flex flex-col gap-8">
-               {related.map(r => (
-                 <Link key={r.metadata.id} href={`/writing/${r.year}/${r.metadata.slug}`} className="block group">
-                   <h4 className="text-xl font-serif text-[var(--color-ink)] group-hover:text-[var(--color-ink-muted)] transition-colors">
-                     {r.metadata.title || "Untitled"}
-                   </h4>
-                   <div className="text-sm font-sans text-[var(--color-ink-faint)] mt-2">
-                     {formatDate(r.metadata.publishedAt as string)}
-                   </div>
-                 </Link>
-               ))}
-            </div>
-          </section>
-        )}
+        <section className="discovery-section mt-32 max-w-4xl mx-auto px-6 text-center">
+          <div className="h-px bg-[var(--color-border)] w-12 mx-auto mb-12"></div>
+          <p className="text-sm font-sans uppercase tracking-widest text-[var(--color-ink-faint)] mb-8">Continue Wandering</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+             {prev ? (
+               <Link href={`/writing/${prev.year}/${prev.metadata.slug}`} className="block group border border-[var(--color-border)] p-6 hover:border-[var(--color-ink-faint)] transition-colors">
+                 <div className="text-xs uppercase tracking-widest text-[var(--color-ink-faint)] mb-3">Previous</div>
+                 <h4 className="text-xl font-serif text-[var(--color-ink)] group-hover:text-[var(--color-ink-muted)] transition-colors">
+                   {prev.metadata.title || "Untitled"}
+                 </h4>
+               </Link>
+             ) : <div className="hidden md:block"></div>}
+             
+             {next && (
+               <Link href={`/writing/${next.year}/${next.metadata.slug}`} className="block group border border-[var(--color-border)] p-6 hover:border-[var(--color-ink-faint)] transition-colors md:text-right">
+                 <div className="text-xs uppercase tracking-widest text-[var(--color-ink-faint)] mb-3">Next</div>
+                 <h4 className="text-xl font-serif text-[var(--color-ink)] group-hover:text-[var(--color-ink-muted)] transition-colors">
+                   {next.metadata.title || "Untitled"}
+                 </h4>
+               </Link>
+             )}
+          </div>
+        </section>
       </main>
     </ReadingModeWrapper>
   );
