@@ -46,7 +46,8 @@ export default function DownloadButton({ title }: { title: string }) {
       const image = canvas.toDataURL('image/png', 1.0);
       const link = document.createElement('a');
       link.href = image;
-      link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+      const safeTitle = title.replace(/[<>:"/\\|?*]/g, '').trim() || 'writing';
+      link.download = `${safeTitle} by Yash Kant Tiwary.png`;
       link.click();
     } catch (error) {
       console.error('Failed to generate image', error);
@@ -69,7 +70,8 @@ export default function DownloadButton({ title }: { title: string }) {
       });
       
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+      const safeTitle = title.replace(/[<>:"/\\|?*]/g, '').trim() || 'writing';
+      pdf.save(`${safeTitle} by Yash Kant Tiwary.pdf`);
     } catch (error) {
       console.error('Failed to generate PDF', error);
     } finally {
