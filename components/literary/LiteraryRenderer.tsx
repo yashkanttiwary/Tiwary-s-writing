@@ -60,32 +60,36 @@ const PoetryRenderer = ({ content, presentation }: { content: string, presentati
 };
 
 const ProseRenderer = ({ content, presentation }: { content: string, presentation?: Writing['metadata']['presentation'] }) => {
-  const paragraphs = content.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
-  
   const measureClass = presentation?.measure === 'book' ? 'max-w-[var(--spacing-reading-prose)]' 
     : presentation?.measure === 'wide' ? 'max-w-[var(--spacing-reading-wide)]' 
     : 'max-w-[var(--spacing-reading-prose)]';
     
+  const dropCapClass = presentation?.dropCap 
+    ? '[&>p:first-of-type]:first-letter:text-5xl [&>p:first-of-type]:first-letter:font-bold [&>p:first-of-type]:first-letter:float-left [&>p:first-of-type]:first-letter:mr-3 [&>p:first-of-type]:first-letter:mt-1' 
+    : '';
+
   return (
-    <div className={`flex flex-col gap-6 font-serif ${measureClass} mx-auto text-lg leading-relaxed w-full`}>
-      {paragraphs.map((para, idx) => {
-        if (para === '• • •') {
-          return (
-            <div key={idx} className="text-center text-var(--color-ink-faint) my-8 tracking-widest">
-              {para}
-            </div>
-          );
-        }
-        
-        return (
-          <p 
-            key={idx} 
-            className={`prose-paragraph ${presentation?.dropCap && idx === 0 ? 'first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1' : ''}`}
-          >
-            {parseInline(para)}
-          </p>
-        );
-      })}
+    <div className={`flex flex-col gap-6 font-serif ${measureClass} mx-auto text-lg leading-relaxed w-full ${dropCapClass}`}>
+      <ReactMarkdown
+        components={{
+          p: ({node, ...props}) => {
+            if (props.children === '• • •') {
+              return <div className="text-center text-var(--color-ink-faint) my-8 tracking-widest">{props.children}</div>;
+            }
+            return <p className="prose-paragraph" {...props} />;
+          },
+          a: ({node, ...props}) => <a className="underline hover:text-black" target="_blank" rel="noopener noreferrer" {...props} />,
+          h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-8 mb-4" {...props} />,
+          h2: ({node, ...props}) => <h2 className="text-2xl font-bold mt-8 mb-4" {...props} />,
+          h3: ({node, ...props}) => <h3 className="text-xl font-bold mt-6 mb-3" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc pl-8 mb-4" {...props} />,
+          ol: ({node, ...props}) => <ol className="list-decimal pl-8 mb-4" {...props} />,
+          li: ({node, ...props}) => <li className="mb-2" {...props} />,
+          blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-6 text-gray-700" {...props} />,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 };

@@ -84,3 +84,9 @@ This archive is designed as a fully open, machine-readable, and SEO-optimized li
 2. **Accurate Excerpts**: You MUST provide an `excerpt` in the frontmatter. If the user does not provide one, derive it deterministically from the first 1-2 lines of the poem or the first sentence of the prose. **NEVER hallucinate, editorialize, or write "SEO-optimized" summaries** that invent meaning not found in the original text.
 3. **Pristine Content**: Do not place algorithmic keywords or hidden SEO text in the markdown body. The human literary reading experience must remain entirely untouched. The infrastructure handles all the machine-readability invisibly.
 4. **Publishing Triggers**: When you successfully add or update a writing, if you are able to execute commands, you may conceptually trigger the IndexNow ping (or just know that the system will automatically include it in the sitemaps/feeds instantly).
+
+## 8. File Creation Path Safety (CRITICAL)
+Always use the exact workspace relative path when creating files (e.g., `content/writings/2026/09/slug.md`). **NEVER duplicate the `/app/applet/` path** (e.g., do NOT write `app/applet/content/...` or `/app/applet/app/applet/...`). This causes the entry to be invisible to the Next.js server. After creating a file, verify its existence at the correct path. If a user says they cannot see the file, always check if you accidentally nested it incorrectly.
+
+## 9. Handling Markdown Elements & Hydration Errors
+When formatting writings, use standard markdown elements like headings (`###`), blockquotes (`>`), and lists (`-`). The system's ReactMarkdown renderer natively handles these blocks. Do NOT try to invent your own nested structures or wrap them incorrectly.
