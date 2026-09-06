@@ -17,6 +17,7 @@ export default function BookmarkButton({ writing, url }: { writing: Writing, url
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     try {
       const stored = localStorage.getItem('tiwary_bookmarks');

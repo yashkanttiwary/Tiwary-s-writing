@@ -3,6 +3,15 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(req: NextRequest) {
   const url = req.nextUrl.pathname;
+
+  // Handle IndexNow key verification
+  if (process.env.INDEXNOW_KEY && url === `/${process.env.INDEXNOW_KEY}.txt`) {
+    return new NextResponse(process.env.INDEXNOW_KEY, {
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+    });
+  }
   
   // Protect admin and private API routes
   if (url.startsWith('/admin') || url.startsWith('/api/private')) {
@@ -38,12 +47,11 @@ export function middleware(req: NextRequest) {
   // General Security Headers for all public responses
   const res = NextResponse.next();
   res.headers.set('X-Content-Type-Options', 'nosniff');
-  res.headers.set('X-Frame-Options', 'DENY');
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   return res;
 }
 
 export const config = {
-  matcher: ['/(.*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)'],
 };
