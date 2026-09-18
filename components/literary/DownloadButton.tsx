@@ -9,6 +9,7 @@ import { LiteraryRenderer } from './LiteraryRenderer';
 export default function DownloadButton({ title, writing }: { title: string, writing?: Writing }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processLabel, setProcessLabel] = useState<string>('');
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -24,92 +25,84 @@ export default function DownloadButton({ title, writing }: { title: string, writ
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const captureElement = async () => {
-    // Look for the optimized capture area instead of the on-screen one
+  const captureElement = async (): Promise<string> => {
     const element = document.getElementById('optimized-capture-area');
-    if (!element) throw new Error('Capture area not found');
-    
-    // Tiny delay to ensure styles and layouts are settled
+    if (!element) throw new Error('Capture area not found in document');
+
+    // Ensure all web fonts (Noto Serif Devanagari, Crimson Pro, Playfair) are fully ready
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+      try {
+        await document.fonts.ready;
+      } catch (e) {
+        console.warn('Font loading check skipped', e);
+      }
+    }
+
+    // Brief delay to allow layout engine to settle
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    const { toPng } = await import('html-to-image');
-
-    // Fix for html-to-image blank images (especially on Safari / with web fonts)
-    // Run once to cache/prime
+    // Try primary high-fidelity html-to-image capture
     try {
-      const scale = 3;
-      const primeOptions = {
-        cacheBust: true,
-        width: element.offsetWidth * scale,
-        height: element.offsetHeight * scale,
-        style: {
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-          width: `${element.offsetWidth}px`,
-          height: `${element.offsetHeight}px`,
-        }
-      };
-      await toPng(element, primeOptions);
-      await toPng(element, primeOptions);
-    } catch(e) {}
-    
-    // Multiply the physical size of the element for rendering to bypass Safari <foreignObject> rasterization bugs
-    const scale = 3;
-    const dataUrl = await toPng(element, {
-      backgroundColor: '#fdfcf9', // Matches var(--color-canvas) exactly
-      pixelRatio: 1, // Keep pixel ratio 1 because we're scaling the element itself
-      width: element.offsetWidth * scale,
-      height: element.offsetHeight * scale,
-      cacheBust: true,
-      skipAutoScale: true,
-      style: {
-        transform: `scale(${scale})`,
-        transformOrigin: 'top left',
-        width: `${element.offsetWidth}px`,
-        height: `${element.offsetHeight}px`,
-      },
+      const { toPng } = await import('html-to-image');
+      const dataUrl = await toPng(element, {
+        backgroundColor: '#fdfcf9',
+        pixelRatio: 2,
+        cacheBust: false,
+        skipFonts: false,
+      });
+      if (dataUrl && dataUrl.length > 1000) {
+        return dataUrl;
+      }
+    } catch (err) {
+      console.warn('html-to-image capture encountered an issue, trying html2canvas fallback:', err);
+    }
+
+    // High-fidelity fallback using html2canvas
+    const html2canvas = (await import('html2canvas')).default;
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      backgroundColor: '#fdfcf9',
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
     });
-    
-    return dataUrl;
+    return canvas.toDataURL('image/png');
   };
 
   const downloadImage = async () => {
     try {
       setIsProcessing(true);
+      setProcessLabel('Exporting Image...');
       const dataUrl = await captureElement();
+      
+      const safeTitle = title.replace(/[<>:"/\\|?*]/g, '').trim() || 'writing';
+      const fileName = `${safeTitle} by Yash Kant Tiwary.png`;
+
       const link = document.createElement('a');
       link.href = dataUrl;
-      const safeTitle = title.replace(/[<>:"/\\|?*]/g, '').trim() || 'writing';
-      link.download = `${safeTitle} by Yash Kant Tiwary.png`;
+      link.download = fileName;
+      document.body.appendChild(link);
       link.click();
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 1000);
     } catch (error) {
       console.error('Failed to generate image', error);
     } finally {
       setIsProcessing(false);
+      setProcessLabel('');
       setIsOpen(false);
     }
   };
 
-  function arrayBufferToBase64(buffer: ArrayBuffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  }
-
   const downloadPDF = async () => {
     try {
       setIsProcessing(true);
+      setProcessLabel('Rendering PDF...');
 
-      // Ensure all web fonts (especially Noto Serif Devanagari and Crimson Pro) are fully ready
-      if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
-        await document.fonts.ready;
-      }
-      
-      // Capture the pristine publication layout
+      // Capture the pristine high-resolution publication layout
       const dataUrl = await captureElement();
       
       const { jsPDF } = await import('jspdf');
@@ -123,6 +116,10 @@ export default function DownloadButton({ title, writing }: { title: string, writ
 
       const imgWidth = img.naturalWidth || img.width;
       const imgHeight = img.naturalHeight || img.height;
+
+      if (!imgWidth || !imgHeight) {
+        throw new Error('Rendered image has zero dimensions');
+      }
 
       // Standard A4 in points: 595.28 x 841.89 pt
       const pdf = new jsPDF({
@@ -154,35 +151,6 @@ export default function DownloadButton({ title, writing }: { title: string, writ
       const scale = printableWidth / imgWidth;
       const totalRenderedHeight = imgHeight * scale;
 
-      // Optional font embedding for invisible selectable text layer
-      let fontLoaded = false;
-      const isDevanagariPiece = writing?.metadata?.language === 'hi' || writing?.metadata?.language === 'mr' || writing?.metadata?.language === 'ne';
-      try {
-        if (isDevanagariPiece) {
-          const notoRes = await fetch('/fonts/NotoSerifDevanagari.ttf');
-          if (notoRes.ok) {
-            const notoBuf = await notoRes.arrayBuffer();
-            const notoBase64 = arrayBufferToBase64(notoBuf);
-            pdf.addFileToVFS('NotoSerifDevanagari.ttf', notoBase64);
-            pdf.addFont('NotoSerifDevanagari.ttf', 'NotoSerifDevanagari', 'normal');
-            pdf.setFont('NotoSerifDevanagari', 'normal');
-            fontLoaded = true;
-          }
-        } else {
-          const playfairRes = await fetch('/fonts/PlayfairDisplay.ttf');
-          if (playfairRes.ok) {
-            const playfairBuf = await playfairRes.arrayBuffer();
-            const playfairBase64 = arrayBufferToBase64(playfairBuf);
-            pdf.addFileToVFS('PlayfairDisplay.ttf', playfairBase64);
-            pdf.addFont('PlayfairDisplay.ttf', 'PlayfairDisplay', 'normal');
-            pdf.setFont('PlayfairDisplay', 'normal');
-            fontLoaded = true;
-          }
-        }
-      } catch (err) {
-        console.warn('Optional font embed for text layer skipped:', err);
-      }
-
       if (totalRenderedHeight <= printableHeight) {
         // Fits comfortably on a single A4 page
         pdf.setFillColor(253, 252, 249); // #fdfcf9 paper tone
@@ -194,32 +162,8 @@ export default function DownloadButton({ title, writing }: { title: string, writ
           : margin;
 
         pdf.addImage(dataUrl, 'PNG', margin, yOffset, printableWidth, totalRenderedHeight, undefined, 'FAST');
-
-        // Add invisible selectable text layer if font is available
-        if (fontLoaded && writing?.content) {
-          try {
-            pdf.setFontSize(10);
-            pdf.text(title || 'Untitled', pdfPageWidth / 2, yOffset + 20, { align: 'center', renderingMode: 'invisible' });
-            let textY = yOffset + 60;
-            const contentLines = writing.content.split('\n');
-            for (const line of contentLines) {
-              if (textY > pdfPageHeight - margin) break;
-              if (line.trim()) {
-                pdf.text(line.trim(), margin + 20, textY, { renderingMode: 'invisible' });
-              }
-              textY += 16;
-            }
-          } catch (e) {
-            // Text layer is purely additive
-          }
-        }
       } else {
         // Multi-page document: slice the canvas cleanly across pages
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = imgWidth;
-        const ctx = sliceCanvas.getContext('2d');
-        if (!ctx) throw new Error('Could not create canvas context');
-
         const sourcePageHeight = printableHeight / scale;
         const totalPages = Math.ceil(imgHeight / sourcePageHeight);
         let sourceY = 0;
@@ -235,34 +179,63 @@ export default function DownloadButton({ title, writing }: { title: string, writ
           pdf.rect(0, 0, pdfPageWidth, pdfPageHeight, 'F');
 
           const currentSliceHeight = Math.min(sourcePageHeight, imgHeight - sourceY);
+          if (currentSliceHeight <= 0) break;
+
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = imgWidth;
           sliceCanvas.height = currentSliceHeight;
+          const ctx = sliceCanvas.getContext('2d');
 
-          // Background fill on canvas
-          ctx.fillStyle = '#fdfcf9';
-          ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-          ctx.drawImage(img, 0, sourceY, imgWidth, currentSliceHeight, 0, 0, imgWidth, currentSliceHeight);
+          if (ctx) {
+            // Background fill on canvas
+            ctx.fillStyle = '#fdfcf9';
+            ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+            ctx.drawImage(img, 0, sourceY, imgWidth, currentSliceHeight, 0, 0, imgWidth, currentSliceHeight);
 
-          const pageDataUrl = sliceCanvas.toDataURL('image/png');
-          const renderedSliceHeight = currentSliceHeight * scale;
+            const pageDataUrl = sliceCanvas.toDataURL('image/png');
+            const renderedSliceHeight = currentSliceHeight * scale;
 
-          pdf.addImage(pageDataUrl, 'PNG', margin, margin, printableWidth, renderedSliceHeight, undefined, 'FAST');
+            pdf.addImage(pageDataUrl, 'PNG', margin, margin, printableWidth, renderedSliceHeight, undefined, 'FAST');
+          }
 
           // Subtle page number on multi-page pieces
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(8);
-          pdf.setTextColor(170, 170, 170);
-          pdf.text(`${pageIndex} of ${totalPages}`, pdfPageWidth / 2, pdfPageHeight - 16, { align: 'center' });
+          if (totalPages > 1) {
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(8);
+            pdf.setTextColor(170, 170, 170);
+            pdf.text(`${pageIndex} of ${totalPages}`, pdfPageWidth / 2, pdfPageHeight - 16, { align: 'center' });
+          }
 
           sourceY += sourcePageHeight;
           pageIndex++;
         }
       }
       
-      pdf.save(`${safeTitle} by Yash Kant Tiwary.pdf`);
+      const fileName = `${safeTitle} by Yash Kant Tiwary.pdf`;
+
+      try {
+        pdf.save(fileName);
+      } catch (saveErr) {
+        console.warn('pdf.save failed, downloading via blob anchor:', saveErr);
+        const blob = pdf.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.href = blobUrl;
+        downloadAnchor.download = fileName;
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        setTimeout(() => {
+          if (document.body.contains(downloadAnchor)) {
+            document.body.removeChild(downloadAnchor);
+          }
+          URL.revokeObjectURL(blobUrl);
+        }, 2000);
+      }
     } catch (error) {
       console.error('Failed to generate PDF', error);
     } finally {
       setIsProcessing(false);
+      setProcessLabel('');
       setIsOpen(false);
     }
   };
@@ -270,34 +243,85 @@ export default function DownloadButton({ title, writing }: { title: string, writ
   const isDevanagari = writing?.metadata?.language === 'hi' || writing?.metadata?.language === 'mr' || writing?.metadata?.language === 'ne';
 
   const optimizedCaptureContainer = mounted && writing ? (
-    <div style={{ position: 'absolute', opacity: 0.0001, top: 0, left: 0, pointerEvents: 'none', zIndex: -100 }}>
     <div 
-      id="optimized-capture-area" 
-      className={`bg-[#fdfcf9] w-[900px] p-[80px] ${isDevanagari ? 'font-devanagari' : ''}`}
-      style={{
-        color: '#1a1a1a',
-        fontFamily: isDevanagari ? 'var(--font-noto-serif-devanagari), var(--font-serif)' : 'var(--font-serif)',
+      aria-hidden="true"
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: '-99999px', 
+        width: '850px',
+        opacity: 1, 
+        visibility: 'visible', 
+        pointerEvents: 'none', 
+        zIndex: -9999 
       }}
     >
-      <div className="flex flex-col items-center">
-        <h1 className={`text-5xl mb-6 text-center font-serif leading-tight text-[#1a1a1a] ${isDevanagari ? 'font-devanagari' : ''}`}>
-          {title || 'Untitled'}
-        </h1>
-        <div className="flex flex-col items-center justify-center gap-2 text-base tracking-wide mb-14 font-sans text-[#666666]">
-          {writing.metadata.publishedAt && <time>{new Date(writing.metadata.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>}
-          {writing.metadata.type && <span className="capitalize">{writing.metadata.type}</span>}
-        </div>
-        
-        <div className={`w-full text-xl leading-relaxed font-serif text-[#1a1a1a] ${isDevanagari ? 'font-devanagari' : ''}`}>
-          <LiteraryRenderer writing={writing} />
-        </div>
-        
-        <div className="mt-20 pt-10 border-t border-[#e5e5e5] w-full text-center font-sans text-base text-[#666666]">
-          <span className="block font-medium mb-1 text-[#1a1a1a]">Yash Kant Tiwary</span>
-          <span>tiwaryswriting.com</span>
+      <style>{`
+        @font-face {
+          font-family: 'Noto Serif Devanagari';
+          src: url('/fonts/NotoSerifDevanagari.ttf') format('truetype');
+          font-weight: 400 700;
+          font-display: block;
+        }
+        @font-face {
+          font-family: 'Playfair Display';
+          src: url('/fonts/PlayfairDisplay.ttf') format('truetype');
+          font-weight: 400 700;
+          font-display: block;
+        }
+      `}</style>
+      <div 
+        id="optimized-capture-area" 
+        className="bg-[#fdfcf9] w-[850px] p-[64px]"
+        style={{
+          backgroundColor: '#fdfcf9',
+          color: '#1a1a1a',
+          width: '850px',
+          boxSizing: 'border-box',
+          fontFamily: isDevanagari ? "'Noto Serif Devanagari', serif" : "'Playfair Display', 'Crimson Pro', Georgia, serif",
+        }}
+      >
+        <div className="flex flex-col items-center">
+          <h1 
+            className="text-4xl sm:text-5xl mb-6 text-center leading-tight font-serif text-[#1a1a1a]"
+            style={{
+              fontFamily: isDevanagari ? "'Noto Serif Devanagari', serif" : "'Playfair Display', Georgia, serif",
+              color: '#1a1a1a',
+            }}
+          >
+            {title || 'Untitled'}
+          </h1>
+          <div className="flex flex-col items-center justify-center gap-1.5 text-sm tracking-wide mb-12 font-sans text-[#666666]">
+            {writing.metadata.publishedAt && (
+              <time>
+                {new Date(writing.metadata.publishedAt).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </time>
+            )}
+            {writing.metadata.type && (
+              <span className="capitalize">{writing.metadata.type}</span>
+            )}
+          </div>
+          
+          <div 
+            className="w-full text-xl leading-relaxed text-[#1a1a1a]"
+            style={{
+              fontFamily: isDevanagari ? "'Noto Serif Devanagari', serif" : "'Playfair Display', 'Crimson Pro', Georgia, serif",
+              color: '#1a1a1a',
+            }}
+          >
+            <LiteraryRenderer writing={writing} />
+          </div>
+          
+          <div className="mt-16 pt-8 border-t border-[#e5e5e5] w-full text-center font-sans text-sm text-[#777777]">
+            <span className="block font-medium mb-1 text-[#1a1a1a]">Yash Kant Tiwary</span>
+            <span>tiwaryswriting.com</span>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   ) : null;
 
@@ -309,9 +333,12 @@ export default function DownloadButton({ title, writing }: { title: string, writ
           className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors p-2"
           title="Download"
           aria-label="Download options"
+          disabled={isProcessing}
         >
           {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-          <span className="hidden sm:inline font-medium">Save</span>
+          <span className="hidden sm:inline font-medium">
+            {isProcessing ? (processLabel || 'Saving...') : 'Save'}
+          </span>
         </button>
         {isOpen && (
           <div className="absolute right-0 top-full mt-2 w-48 bg-[#fdfcf9] border border-[var(--color-border)] rounded shadow-sm py-1 z-50 flex flex-col font-sans text-sm">

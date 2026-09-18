@@ -29,8 +29,12 @@ export default async function Home() {
     );
   }
 
-  // --- Featured ---
+  // --- Featured & Latest ---
   const featured = allWritings.find(w => w.metadata.featured) || allWritings[0];
+  const latestWriting = allWritings[0];
+  const latestHref = latestWriting 
+    ? `/writing/${latestWriting.year}/${latestWriting.metadata.slug}` 
+    : '/latest';
   
   // --- Temporal discovery ("On This Day") ---
   const today = new Date();
@@ -130,28 +134,28 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <header className="py-12 px-6 sm:px-12 max-w-5xl mx-auto w-full flex flex-col sm:flex-row sm:items-baseline justify-between gap-6">
+      <header className="py-12 lg:py-16 px-6 sm:px-12 lg:px-16 xl:px-24 2xl:px-32 max-w-7xl 2xl:max-w-[1700px] mx-auto w-full flex flex-col sm:flex-row sm:items-baseline justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-serif tracking-tight text-[var(--color-ink)]">Tiwary’s Writing</h1>
-          <p className="text-[var(--color-ink-muted)] mt-2 font-serif italic text-lg">A life, left in words.</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif tracking-tight text-[var(--color-ink)]">Tiwary’s Writing</h1>
+          <p className="text-[var(--color-ink-muted)] mt-2 font-serif italic text-lg sm:text-xl lg:text-2xl">A life, left in words.</p>
         </div>
-        <nav className="flex gap-6 items-center">
-          <Link href="/latest" className="text-sm font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
+        <nav className="flex gap-6 sm:gap-8 items-center text-sm sm:text-base lg:text-lg">
+          <Link href={latestHref} className="font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
             Latest
           </Link>
-          <Link href="/archive" className="text-sm font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
+          <Link href="/archive" className="font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
             Archive
           </Link>
-          <Link href="/collections" className="text-sm font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
+          <Link href="/collections" className="font-sans tracking-wide uppercase text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
             Collections
           </Link>
           <Link href="/search" className="text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors ml-2" aria-label="Search">
-            <Search size={16} strokeWidth={1.5} />
+            <Search size={18} strokeWidth={1.5} className="lg:w-5 lg:h-5" />
           </Link>
         </nav>
       </header>
 
-      <div className="flex-1 px-6 sm:px-12 max-w-5xl mx-auto w-full flex flex-col gap-20 pb-20">
+      <div className="flex-1 px-6 sm:px-12 lg:px-16 xl:px-24 2xl:px-32 max-w-7xl 2xl:max-w-[1700px] mx-auto w-full flex flex-col gap-20 lg:gap-28 pb-20">
         
         {/* Featured (Asymmetric) */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-start">
@@ -328,7 +332,7 @@ export default async function Home() {
 
         {/* Discovery */}
         <section className="py-12 flex flex-col items-center justify-center text-center">
-          <Link href="/random" className="group flex flex-col items-center gap-4">
+          <Link href="/random" prefetch={false} className="group flex flex-col items-center gap-4">
              <div className="w-12 h-12 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-ink-muted)] group-hover:bg-[var(--color-ink)] group-hover:text-[var(--color-canvas)] group-hover:border-[var(--color-ink)] transition-all duration-500 hover:scale-105 active:scale-95">
                 <Sparkles size={18} strokeWidth={1.5} className="group-hover:rotate-12 transition-transform duration-500" />
              </div>

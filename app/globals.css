@@ -14,9 +14,9 @@
   --color-ink-faint: #6b6b6b;
   --color-border: #e0ddd0;
   
-  --spacing-reading-poetry: 40ch;
-  --spacing-reading-prose: 65ch;
-  --spacing-reading-wide: 80ch;
+  --spacing-reading-poetry: clamp(40ch, 45vw, 75ch);
+  --spacing-reading-prose: clamp(65ch, 55vw, 95ch);
+  --spacing-reading-wide: clamp(80ch, 65vw, 115ch);
 }
 
 @layer utilities {

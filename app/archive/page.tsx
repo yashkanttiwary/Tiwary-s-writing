@@ -25,17 +25,17 @@ export default async function ArchivePage() {
 
   return (
     <main className="min-h-screen pb-32">
-      <header className="py-20 px-6 sm:px-12 max-w-5xl mx-auto w-full flex items-center justify-between">
+      <header className="py-16 lg:py-24 px-6 sm:px-12 lg:px-16 xl:px-24 2xl:px-32 max-w-7xl 2xl:max-w-[1700px] mx-auto w-full flex items-center justify-between">
         <div>
-           <Link href="/" className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors mb-4">
-             <ArrowLeft size={14} />
+           <Link href="/" className="inline-flex items-center gap-2 text-sm sm:text-base lg:text-lg font-sans text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors mb-4">
+             <ArrowLeft size={16} className="lg:w-5 lg:h-5" />
              <span>Return</span>
            </Link>
-           <h1 className="text-3xl font-serif text-[var(--color-ink)]">The Archive</h1>
+           <h1 className="text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-serif text-[var(--color-ink)]">The Archive</h1>
         </div>
       </header>
 
-      <div className="px-6 sm:px-12 max-w-5xl mx-auto w-full">
+      <div className="px-6 sm:px-12 lg:px-16 xl:px-24 2xl:px-32 max-w-7xl 2xl:max-w-[1700px] mx-auto w-full">
         {writings.length === 0 ? (
           <p className="text-[var(--color-ink-muted)] font-serif italic">The archive is empty.</p>
         ) : (

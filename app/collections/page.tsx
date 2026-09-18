@@ -58,26 +58,26 @@ export default async function CollectionsPage({ searchParams }: Props) {
   return (
     <ReadingModeWrapper>
       <main className="min-h-screen bg-[var(--color-canvas)] pb-32">
-        <nav className="py-8 px-6 sm:px-12 max-w-5xl mx-auto w-full flex items-center justify-between opacity-50 hover:opacity-100 transition-opacity">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
-            <ArrowLeft size={14} />
+        <nav className="py-8 lg:py-12 px-6 sm:px-12 lg:px-16 xl:px-24 2xl:px-32 max-w-7xl 2xl:max-w-[1700px] mx-auto w-full flex items-center justify-between opacity-75 hover:opacity-100 transition-opacity">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm sm:text-base lg:text-lg font-sans text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
+            <ArrowLeft size={16} className="lg:w-5 lg:h-5" />
             <span>Home</span>
           </Link>
         </nav>
 
-        <article className="px-6 sm:px-12 pt-10 sm:pt-16 max-w-4xl mx-auto">
-          <header className="mb-16">
+        <article className="px-6 sm:px-12 lg:px-16 xl:px-24 2xl:px-32 pt-8 sm:pt-14 max-w-7xl 2xl:max-w-[1700px] mx-auto">
+          <header className="mb-16 lg:mb-20">
              <div className="flex items-center gap-4 mb-6">
-                <Book className="text-[var(--color-ink-faint)]" size={24} strokeWidth={1} />
-                <h1 className="text-3xl font-serif text-[var(--color-ink)]">
+                <Book className="text-[var(--color-ink-faint)]" size={28} strokeWidth={1} />
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[var(--color-ink)]">
                   {isThemeFilter ? 'Themes' : 'Collections'}
                 </h1>
              </div>
              
              {!filterActive && (
-               <p className="text-[var(--color-ink-muted)] font-serif italic text-lg max-w-2xl">
-                 Writings grouped by shared themes, eras, or forthcoming volumes.
-               </p>
+                <p className="text-[var(--color-ink-muted)] font-serif italic text-lg sm:text-xl lg:text-2xl max-w-3xl">
+                  Writings grouped by shared themes, eras, or forthcoming volumes.
+                </p>
              )}
 
              {filterActive && (
